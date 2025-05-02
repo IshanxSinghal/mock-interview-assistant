@@ -3,54 +3,137 @@ import axios from 'axios';
 
 const formatSummary = (summaryText) => {
   if (!summaryText) return null;
-  
-  // Remove interviewer signature if present
+
+  // Remove "Your name interviewer" if present
   summaryText = summaryText.replace(/\n*Your name interviewer$/i, '');
+
+  // Use a more reliable approach: Extract each section by directly parsing the content
+  const sections = [];
+  let remainingText = summaryText;
   
-  // Split the summary into paragraphs
-  const paragraphs = summaryText.split('\n\n');
+  // List of sections we expect to find in order
+  const expectedSections = [
+    { id: "overall", title: /\d+\.\s*Overall Performance:?/i },
+    { id: "strengths", title: /\d+\.\s*Strengths:?/i },
+    { id: "improvement", title: /\d+\.\s*Areas for Improvement:?/i },
+    { id: "steps", title: /\d+\.\s*Actionable Next Steps:?/i }
+  ];
+  
+  // Extract each section
+  for (let i = 0; i < expectedSections.length; i++) {
+    const section = expectedSections[i];
+    const match = remainingText.match(section.title);
+    
+    if (match) {
+      const startIndex = match.index;
+      const headerText = match[0];
+      
+      // Find the start of the next section (or end of text)
+      let endIndex = remainingText.length;
+      if (i < expectedSections.length - 1) {
+        const nextMatch = remainingText.match(expectedSections[i + 1].title);
+        if (nextMatch) {
+          endIndex = nextMatch.index;
+        }
+      }
+      
+      // Extract section content (excluding the header)
+      const contentStartIndex = startIndex + headerText.length;
+      const content = remainingText.substring(contentStartIndex, endIndex).trim();
+      
+      // Add to our sections array
+      sections.push({ 
+        id: section.id,
+        header: headerText.trim(), 
+        content: content 
+      });
+      
+      // Update remaining text to start from this section's end
+      remainingText = remainingText.substring(endIndex);
+    }
+  }
+  
+  // Check for closing text (like "Best regards")
+  const closingMatch = remainingText.match(/Best regards,?/i);
+  if (closingMatch) {
+    sections.push({
+      id: "closing",
+      header: null,
+      content: remainingText.trim()
+    });
+  }
   
   return (
-    <div className="space-y-4">
-      {paragraphs.map((paragraph, i) => {
-        // Check if this is a heading (numbered items or ending with a colon)
-        if (/^\d+\.|\w+:$/.test(paragraph.trim())) {
+    <div className="space-y-6">
+      {sections.map((section, index) => {
+        if (section.id === "closing") {
           return (
-            <h4 key={i} className="text-lg font-bold text-indigo-700 mt-4">{paragraph}</h4>
-          );
-        }
-        
-        // Check if contains "strengths" keyword
-        else if (/strength|strong point|excel/i.test(paragraph)) {
-          return (
-            <div key={i} className="pl-4 border-l-4 border-green-500 bg-green-50 p-3 rounded">
-              <p className="text-gray-800">{paragraph}</p>
+            <div key={index} className="text-right italic text-gray-600 mt-6">
+              {section.content}
             </div>
           );
         }
         
-        // Check if contains "improve" or "weakness" keywords
-        else if (/improve|weaker|weakness|work on/i.test(paragraph)) {
-          return (
-            <div key={i} className="pl-4 border-l-4 border-amber-500 bg-amber-50 p-3 rounded">
-              <p className="text-gray-800">{paragraph}</p>
-            </div>
-          );
+        // Determine styling based on section ID
+        let borderColor, bgColor;
+        switch(section.id) {
+          case "overall":
+            borderColor = "border-blue-500";
+            bgColor = "bg-blue-50";
+            break;
+          case "strengths":
+            borderColor = "border-green-500";
+            bgColor = "bg-green-50";
+            break;
+          case "improvement":
+            borderColor = "border-amber-500";
+            bgColor = "bg-amber-50";
+            break;
+          case "steps":
+            borderColor = "border-red-500";
+            bgColor = "bg-red-50";
+            break;
+          default:
+            borderColor = "border-gray-300";
+            bgColor = "bg-gray-50";
         }
         
-        // Check if contains "actionable steps" or "next steps" keywords
-        else if (/action|next steps|recommend|suggestion|advice/i.test(paragraph)) {
-          return (
-            <div key={i} className="pl-4 border-l-4 border-red-500 bg-red-50 p-3 rounded">
-              <p className="text-gray-800">{paragraph}</p>
-            </div>
-          );
-        }
+        // Process content for bullet points
+        const contentLines = section.content.split('\n').filter(line => line.trim());
         
-        // Regular paragraph
-        else {
-          return <p key={i} className="text-gray-700">{paragraph}</p>;
-        }
+        return (
+          <div key={index} className={`pl-4 border-l-4 ${borderColor} ${bgColor} p-4 rounded mb-6`}>
+            <h4 className="text-xl font-bold text-gray-800 mb-3">{section.header}</h4>
+            <div className="space-y-2">
+              {contentLines.map((line, lineIdx) => {
+                const trimmedLine = line.trim();
+                
+                // Check for section title repeats in the first line and skip if found
+                if (lineIdx === 0) {
+                  for (const name of ["Overall Performance", "Strengths", "Areas for Improvement", "Actionable Next Steps"]) {
+                    if (trimmedLine === name) {
+                      return null;
+                    }
+                  }
+                }
+                
+                // Format bullet points
+                if (trimmedLine.startsWith('•') || trimmedLine.startsWith('*') || trimmedLine.startsWith('-')) {
+                  return (
+                    <div key={lineIdx} className="flex mb-2">
+                      <span className="mr-2">•</span>
+                      <p className="text-gray-800">{trimmedLine.replace(/^[•*-]\s*/, '')}</p>
+                    </div>
+                  );
+                }
+                
+                return trimmedLine ? (
+                  <p key={lineIdx} className="text-gray-800 mb-2">{trimmedLine}</p>
+                ) : null;
+              })}
+            </div>
+          </div>
+        );
       })}
     </div>
   );
