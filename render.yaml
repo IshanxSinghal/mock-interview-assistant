@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: mock-interview-assistant
+    runtime: python
+    runtimeVersion: 3.11.0
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn server:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: FLASK_ENV
+        value: production
