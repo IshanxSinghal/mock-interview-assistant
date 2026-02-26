@@ -1,0 +1,189 @@
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  DEPLOYMENT ARCHITECTURE                     │
+└─────────────────────────────────────────────────────────────┘
+
+                    ┌──────────────┐
+                    │    USERS     │
+                    │   (Browser)  │
+                    └──────┬───────┘
+                           │
+                           ▼
+              ┌────────────────────────┐
+              │   FRONTEND (React)     │
+              │                        │
+              │  Deployed on:          │
+              │  • Vercel (Free)       │
+              │  • Netlify             │
+              │  • Render              │
+              │                        │
+              │  URL: your-app.vercel  │
+              └────────┬───────────────┘
+                       │
+                       │ HTTPS Requests
+                       │
+                       ▼
+              ┌────────────────────────┐
+              │   BACKEND (Flask)      │
+              │                        │
+              │  Deployed on:          │
+              │  • Render (Free)       │
+              │  • Railway             │
+              │  • Heroku              │
+              │                        │
+              │  Endpoints:            │
+              │  • /next-question      │
+              │  • /submit-answer      │
+              │  • /interview-summary  │
+              │  • /clear-session      │
+              └────────┬───────────────┘
+                       │
+                       │ API Calls
+                       │
+                       ▼
+              ┌────────────────────────┐
+              │    GROQ API (LLM)      │
+              │                        │
+              │  Model: llama3-70b     │
+              │  • Question generation │
+              │  • Feedback analysis   │
+              │  • Performance summary │
+              └────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────┐
+│                   DEPLOYMENT WORKFLOW                        │
+└─────────────────────────────────────────────────────────────┘
+
+Step 1: PREPARE CODE
+    ├── ✅ Create Procfile
+    ├── ✅ Create runtime.txt
+    ├── ✅ Update requirements.txt
+    ├── ✅ Update server.py for production
+    └── ✅ Configure environment variables
+
+Step 2: BACKEND DEPLOYMENT
+    │
+    ├── Push to GitHub
+    │   └── git push origin main
+    │
+    ├── Deploy to Render
+    │   ├── Connect repository
+    │   ├── Set build command
+    │   ├── Add GROQ_API_KEY
+    │   └── Deploy
+    │
+    └── Get Backend URL
+        └── https://your-backend.onrender.com
+
+Step 3: FRONTEND DEPLOYMENT
+    │
+    ├── Update .env.production
+    │   └── REACT_APP_API_URL=<backend-url>
+    │
+    ├── Push to GitHub
+    │   └── git push origin main
+    │
+    ├── Deploy to Vercel
+    │   ├── Connect repository
+    │   ├── Set root: mock-interview-assistant
+    │   ├── Add environment variable
+    │   └── Deploy
+    │
+    └── Get Frontend URL
+        └── https://your-app.vercel.app
+
+Step 4: CONFIGURE & TEST
+    ├── Update CORS on backend
+    ├── Test complete interview flow
+    ├── Monitor logs
+    └── ✅ Ready for users!
+
+
+┌─────────────────────────────────────────────────────────────┐
+│                    FILE STRUCTURE                            │
+└─────────────────────────────────────────────────────────────┘
+
+Mock-Interview-Assistant/
+│
+├── Backend Files (Deploy to Render)
+│   ├── server.py              ← Main Flask application
+│   ├── llm_connect.py          ← Groq API integration
+│   ├── questions.py            ← Question database
+│   ├── requirements.txt        ← Python dependencies
+│   ├── Procfile                ← Deployment command
+│   ├── runtime.txt             ← Python version
+│   └── .env                    ← Local environment (not deployed)
+│
+├── Frontend Files (Deploy to Vercel)
+│   └── mock-interview-assistant/
+│       ├── src/
+│       │   ├── App.js          ← Main React component
+│       │   ├── App.css         ← Styling
+│       │   └── index.js        ← Entry point
+│       ├── public/             ← Static assets
+│       ├── package.json        ← Node dependencies
+│       └── .env.production     ← Production config
+│
+└── Documentation
+    ├── DEPLOYMENT.md           ← Full deployment guide
+    ├── QUICK_DEPLOY.md         ← Quick reference
+    ├── README.md               ← Project overview
+    ├── start.sh                ← Local dev script
+    └── check-deployment.sh     ← Pre-deploy checks
+
+
+┌─────────────────────────────────────────────────────────────┐
+│              ENVIRONMENT VARIABLES FLOW                      │
+└─────────────────────────────────────────────────────────────┘
+
+Development:
+    .env (local)
+    └── GROQ_API_KEY=xxx
+    
+    mock-interview-assistant/.env (local)
+    └── REACT_APP_API_URL=http://localhost:5000
+
+Production:
+    Render Dashboard (Backend)
+    └── GROQ_API_KEY=xxx
+    
+    .env.production + Vercel Dashboard (Frontend)
+    └── REACT_APP_API_URL=https://backend.onrender.com
+
+
+┌─────────────────────────────────────────────────────────────┐
+│                   COST BREAKDOWN                             │
+└─────────────────────────────────────────────────────────────┘
+
+FREE TIER:
+    Render (Backend):
+        ✓ 750 hours/month
+        ⚠ Sleeps after 15 min inactivity
+        ✓ 512MB RAM
+        
+    Vercel (Frontend):
+        ✓ Unlimited sites
+        ✓ 100GB bandwidth/month
+        ✓ Automatic SSL
+        ✓ Global CDN
+
+TOTAL: $0/month 🎉
+
+
+┌─────────────────────────────────────────────────────────────┐
+│              MONITORING & MAINTENANCE                        │
+└─────────────────────────────────────────────────────────────┘
+
+    Check Backend Logs:
+    └── Render Dashboard → Your Service → Logs
+    
+    Check Frontend Logs:
+    └── Vercel Dashboard → Deployments → View Logs
+    
+    Auto-Deployment:
+    └── Push to GitHub → Automatic redeploy
+    
+    Health Checks:
+    └── Visit /next-question endpoint directly
+```
