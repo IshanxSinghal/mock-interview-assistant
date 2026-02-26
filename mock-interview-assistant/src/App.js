@@ -1,6 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
 
+// Configure axios base URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+axios.defaults.baseURL = API_BASE_URL;
+
 const formatSummary = (summaryText) => {
   if (!summaryText) return null;
 
